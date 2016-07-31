@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Discrete Fourier Transform</title>
+        <meta name="viewport" content="width=device-width">
+        <meta name="description" content="discrete Fourier transform tutorial">
+        <!-- <link rel="canonical" href="http://karpathy.github.io/2015/03/30/breaking-convnets/"> -->
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="./css/main.css">
+        
+        <!-- mathjax -->
+        <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_CHTML"></script>
+    </head>
+    
+    <body>
+        <div class="page-content">
+        <div class="wrap">
+        <div class="post">
+            <header class="post-header">
+                <h1>傻瓜也懂的 Discrete Fourier Transform</h1>
+                <p class="meta">Aug 1, 2016</p>
+            </header>
+            
+            <article class="post-content">
+                <p>什麼是discrete Fourier transform (DFT)? 相信很多人跟我一樣大學時候聽教授講課，
+                左耳進右耳出，一片雲彩也沒能帶走，這裡我們介紹一個簡單的方向來(重新)認識它。</p>
+                
+                <p>DFT是一個能夠解析訊號的<strong>頻率成分 (frequency components)</strong>的演算法，
+                也就是大家常說的時域訊號轉<strong>頻譜 (spectrum)</strong>。在說明DFT怎麼做到
+                這件事之前，我們先來談訊號間的相似性 (similarity)。</p>
+                
+                <h3 id="similarity">Similarity</h3>
+                
+                <p>當你在照鏡子的時候，你會說鏡中的人跟你的相似性很高，因為你往左他就往左，你往右他
+                就往右。我們也可以給予訊號一樣的解釋，當兩個訊號的變化很同步的時候，我們就可以說它們
+                的相似性很高。</p>
+                
+                <p>或許你曾經看過以下這個數學式:</p>
+                <p>`similarity = \sum_{n=0}^{N-1} x(n)y(n)`</p>
+                
+                <p>這個式子告訴我們，假如x跟y的相似性很高，那麼當x(n)是正數的時候y(n)就會是正數，
+                而當x(n)是負數的時候y(n)也會是負數，此時把x(n)乘上y(n)我們會得到一個正數。反之，
+                如果x跟y的相似性很低，那麼當x(n)是正數的時候y(n)就會是負數，而當x(n)是負數的時候y(n)
+                反而變成是正數，此時把x(n)乘上y(n)會得到一個負數。</p>
+                
+                <div class="fig figcenter fighighlight">
+                    <img src="./figure/1.jpg" />
+                    <div class="figcaption">
+                        上: 高相似性的訊號範例，當兩個訊號變化很一致的時候，我們會計算出一個很大
+                        的正數。下: 低相似性的訊號範例，當兩個訊號變化不一致的時候，我們會計算出
+                        一個很小的正數甚至是負數。
+                    </div>
+                </div>
+                
+                <h3 id="discrete_fourier_transform">Discrete Fourier Transform</h3>
+                
+                <p>相似性跟DFT怎麼扯上關係呢? 讓我們來看看DFT的公式</p>
+                <p>`X(k) = \sum_{n=0}^{N-1} x(n)e^{-2\pikn/N}`</p>
+                
+                <p>又是exponential又是虛數的看起來很複雜，我們先把後面那陀`e^{-2\pikn/N}`用y(n)來表示</p>
+                <p>`X(k) = \sum_{n=0}^{N-1} x(n)y(n)`</p>
+                
+                <p>喔喔，這不就恰好是前面所講的similarity的數學式嗎! 原來DFT是在算x(n)跟`e^{-2\pikn/N}`
+                之間的相似性啊。那那那，`e^{-2\pikn/N}`又是什麼東西呢?</p>
+                
+                <p>數學上，我們可以把exponential拆解成sin跟cos的組合</p>
+                <p>`e^{-i\theta}=cos\theta-isin\theta`</p>
+                
+                <p>如果讓 `\theta=2\pikn/N`，那我們就可以得到</p>
+                <p>`e^{-2\pikn/N}=cos(2\pikn/N)-isin(2\pikn/N)`</p>
+                
+                <p>現在我們可以把DFT的公式做個改寫</p>
+                <p>`X(k) = \sum_{n=0}^{N-1} x(n)e^{-2\pikn/N}`</p>
+                <p>`\qquad\qquad = \sum_{n=0}^{N-1} x(n)[cos(2\pikn/N)-isin(2\pikn/N)]`</p>
+                <p>`\qquad\qquad = \sum_{n=0}^{N-1} x(n)cos(2\pikn/N) - i\sum_{n=0}^{N-1} x(n)sin(2\pikn/N)`</p>
+            
+                <p>實數跟複數，河水不犯井水，讓我們專心解析實數的部分</p>
+                <p>`X(0) = \sum_{n=0}^{N-1} x(n)cos(2\pi\*0\*n/N)`</p>
+                <p>`X(1) = \sum_{n=0}^{N-1} x(n)cos(2\pi\*1\*n/N)`</p>
+                <p>`\*\*\*`</p>
+                <p>`X(k) = \sum_{n=0}^{N-1} x(n)cos(2\pi\*k\*n/N)`</p>
+                
+                <p>現在所謂頻率成分在我們的眼中看來就是在計算x(n)跟各種的cos週期波之間的相似性。
+                我們來看看不同的k值的cos會怎麼變化，將k試著代入不同的值，我們可以發現，k越大，
+                頻率越快</p>
+                
+                <div class="fig figcenter fighighlight">
+                    <img src="./figure/2.jpg" />
+                </div>
+                
+                <p>Great! DFT現在可以看成是在計算x(n)跟各種頻率的cos週期波之間的相似性。
+                如果想把k值轉換到真實頻率的話，我們就需要知道x的取樣頻率，轉換公式如下:</p>
+                <p>`f=(k\*fs)/N`</p>
+                <p>fs是取樣頻率，N則是取樣點的個數。現在我們知道了DFT的背後的原理是什麼了，
+                接下來我們實際用Matlab做一組訊號來試看看DFT，
+                訊號由5Hz跟12Hz兩個頻率所組成並帶有一些雜訊，其中12Hz的震幅要大於5Hz。</p>
+                
+                <div class="fig figcenter fighighlight">
+                    <img src="./figure/3.jpg" />
+                    <img src="./figure/4.jpg" />
+                </div>
+                
+                <p>看起來很不錯，在5Hz跟12Hz的頻率成分都成功地解析出來，而且還分辨得出12Hz的訊號要強於5Hz。</p>
+                
+            </article>
+        </div>
+        </div>
+        </div>
+    </body>
+
+
+</html>
