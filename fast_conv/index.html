@@ -12,6 +12,8 @@
         
         <!-- mathjax -->
         <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_CHTML"></script>
+        
+
     </head>
     
     <body>
@@ -64,9 +66,9 @@
                 <p>從上面的規則，我們可以得到<em>strides</em> = (stride*W, stride, 1*W, 1)。不過，這個只是順序的offset，
                 不是實際記憶體位址的offset。我們必須再根據x實際的data type來計算記憶體位址，
                 因此最後再將strides乘上x.itemsize。</p>
-                
+
                 <div class="fig figcenter fighighlight">
-                    <img src="./figure/examplee.png" />
+                    <script src="https://gist.github.com/ashin29/edc4bd08cd5e685304e98093740972c4.js"></script>
                 </div>
                 
                 
