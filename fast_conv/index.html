@@ -5,8 +5,8 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>Fast Convolution in Python</title>
         <meta name="viewport" content="width=device-width">
-        <meta name="description" content="Fast Convolution in Python">
-        <link rel="canonical" href="https://ashin29.github.io/Tutorial/fast_conv/">
+        <meta name="description" content="Understanding NumPy as_strided">
+        <link rel="canonical" href="https://synliao.github.io/Tutorial/fast_conv/">
         <!-- Custom CSS -->
         <link rel="stylesheet" href="./css/main.css">
         
@@ -21,16 +21,19 @@
         <div class="wrap">
         <div class="post">
             <header class="post-header">
-                <h1>Fast Convolution in Python</h1>
+                <h1>Understanding NumPy as_strided</h1>
                 <p class="meta">Oct 12, 2016</p>
             </header>
             
             <article class="post-content">
+                <p>NumPy的<strong>as_strided</strong>是一個操弄data的小技巧，常用於避免使用for迴圈
+                來加速運算，最典型的例子是Convolution。</p>
+                
                 <p>Convolution在影像處理上是很常利用到的計算。直覺上要實現它非常簡單，用for迴圈
-                幾行程式即可輕易完成。但是當資料量很龐大的時候，例如幾百萬張圖，這個時候在Python上
+                幾行程式即可輕易完成。但是當資料量很龐大的時候，例如幾萬張圖，這個時候在Python上
                 跑for迴圈就是一場惡夢了。</p>
                 
-                <p>如同Matlab，如果我們可以用矩陣運算取代for迴圈的話，那麼預期計算效率將會有驚人的提升。
+                <p>如同Matlab，如果我們可以用矩陣運算取代for迴圈的話，那麼計算效率將會有驚人的提升。
                 以下圖的一維矩陣做例子，要得到綠色的5個值，我們需要經過5次的迴圈;但如果先把convolution
                 要用到的data展開成一個二維矩陣，這時候只要一個簡單的矩陣乘法就可以得到我們要的結果了。
                 簡單的說，就是以空間換取時間!</p>
@@ -39,12 +42,9 @@
                     <img src="./figure/mat.png" />
                 </div>
                 
-                <p>在了解如何加速之後，我們來看看在Python上怎麼實作。很幸運的，NumPy提供了<strong>as_strided</strong>
-                這個function。筆者在第一次看<strong>as_strided</strong>的時候，老實說花了很多時間才弄懂要怎麼用。
-                希望下面的簡易範例能夠幫助大家理解它。</p>
-                
-                <p>首先我們建立一張簡單的2D圖，然後定義好filter的大小以及stride的距離。根據以上
-                資訊，我們可以計算出經過convolution後的圖的大小。</p>
+                <p>在了解如何加速之後，我們來看看在Python上怎麼用<strong>as_strided</strong>來實作。
+                首先我們建立一張簡單的2D圖，然後定義好filter的大小 (HH, WW)以及stride的距離。根據以上
+                資訊，我們可以計算出經過convolution後的圖的大小 (OH, OW)。</p>
                 
                 <p>再來就是用<strong>as_strided</strong>把data展開，它需要兩個參數: <em>shape</em>跟<em>strides</em>。
                 <em>shape</em>就是data展開後的矩陣的dimension，由於在每個要進行
