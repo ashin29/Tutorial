@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Discrete Fourier Transform</title>
+        <meta name="viewport" content="width=device-width">
+        <meta name="description" content="Understanding Adaptive Noise Cancellation">
+        <link rel="canonical" href="https://circularzinc.github.io/Tutorial/anc/">
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="./css/main.css">
+        
+        <!-- mathjax -->
+        <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_CHTML"></script>
+    </head>
+    
+    <body>
+        <div class="page-content">
+        <div class="wrap">
+        <div class="post">
+            <header class="post-header">
+                <h1>Understanding Adaptive Noise Cancellation</h1>
+                <p class="meta">Oct 27, 2016</p>
+            </header>
+            
+            <article class="post-content">
+                <p>Adaptive Noise Cancellation (ANC)的用途是濾除雜訊以增強訊號，
+                常被應用在real time的系統上，例如抗噪耳機就是一個典型的應用。
+                ANC在使用上有一些限制，這些限制將會影響雜訊過濾的效果。
+                因此想利用ANC，就必須去了解這些限制，才能夠發揮出它的威力。</p>
+                
+                <h3 id="introduction">Introduction</h3>
+                
+                <p>來自感測器的訊號X會同時夾帶著乾淨的訊號`S`與雜訊`N`</p>
+                <p>`X = S + N`</p>
+                <p>直覺上，如果有辦法得到另一個訊號`y`單純只有雜訊</p>
+                <p>`y = N`</p>
+                <p>那麼，只要將X扣掉Y就可以得到S</p>
+                <p>`Z = X - y = (S + N) - N = S`</p>
+                
+                <p>然而，事情總是無法如此美好，要得到跟`N`一模一樣的訊號是幾乎不可能的。
+                不過，ANC說，不知道N沒關係，只要你能給我一個跟`N`有關係的訊號`n`，
+                那麼我就能夠將`N`的影響降低。</p>
+                
+                <h3 id="adaptive_noise_cancellation">Adaptive Noise Cancellation</h3>
+                
+                <div class="fig figcenter fighighlight">
+                    <img src="./figure/1.png" />
+                </div>
+                
+                <p>ANC的系統架構如上圖，系統的Input有一個訊號源X以及一個雜訊參考源`n`，
+                其中`n`跟`N`有一個未知的關係存在。隨著訊號不斷輸入，
+                adaptive filter會漸漸地找到n跟N之間的關係讓`y`近似`N`。假如很完美的`y`跟`N`一模一樣，
+                那麼ANC的輸出`Z = S + (N - y) = S`。</p>
+                
+                <p>Adaptive filter聽起來像是在做回歸分析，但是不對啊，`N`不是未知的嗎，
+                怎麼有辦法去對一個未知的東西做近似呢? 事實上，ANC做了兩項假設，
+                讓它能夠在不知道`N`的情況下就能夠讓`y`近似`N`。</p>
+                
+                <p>我們先對Z做一些分析:</p>
+                <p>`Z = S + (N - y)`</p>
+                <p>`Z^2 = S^2 + (N-y)^2 + 2S(N-y)`</p>
+                <p>`E[Z^2] = E[S^2] + E[(N-y)^2] + 2E[S(N-y)]`</p>
+                
+                <br>
+                <p>ANC在這邊做了第一個假設: <strong>訊號與雜訊是uncorrelated</strong>。</p>
+                <p>根據這個假設，我們可以把上面的式子改寫:</p>
+                <p>`E[Z^2] = E[S^2] + E[(N-y)^2] + 2E[S(N-y)]`</p> 
+                <p>`\qquad\qquad\quad = E[S^2] + E[(N-y)^2] + 2E[S]E[(N-y)]`</p>
+                
+                <br>
+                <p>此時，ANC做了第二個假設: <strong>訊號的期望值為0 (`E[S] = 0`)</strong>。</p>
+                <p>所以可以把上面的式子化簡:</p>
+                <p>`E[Z^2] = E[S^2] + E[(N-y)^2]`</p>
+                
+                <br>
+                <p>如果我們去最小化`E[Z^2]`<p>
+                <p>Min`{E[Z^2]} = `Min`{E[S^2] + E[(N-y)^2]}`<p>
+                
+                <p>由於ANC系統調變的對象只有`y`，因此可以改寫成<p>
+                <p>Min`{E[Z^2]} = `Min`{E[(N-y)^2]}`<p>
+                
+                <br>
+                <p>從最後的式子可以發現，最小值將發生在`N = y`的時候，此時
+                <p>`Z = S + (N - y) = S`</p>
+                
+                <p>好極了，雜訊完全被濾除。也就是說，
+                <strong>我們去最小化輸出端的能量，就等同於在最小化雜訊的能量</strong>。</p>
+                
+                <h3 id="restrictions">Restrictions</h3>
+                <p>ANC是一個很有用的工具，前提是能夠符合它的應用條件。
+                還記得我們在前面提到的兩項假設嗎: </p>
+                
+                <ul>
+                    <li>訊號與雜訊是uncorrelated</li>
+                    <li>訊號的期望值為0</li>
+                </ul>
+                
+                <p>當這兩項條件任何一項不符合的時候，
+                所謂的<strong>最小化輸出端的能量等同於在最小化雜訊的能量</strong>
+                這件事情就無法成立。在實際應用上，
+                要找到一個跟訊號完全uncorrelated的參考雜訊是最困難的事情，
+                這也是為什麼我們很少能夠用ANC將雜訊完全濾除。</p>
+                
+                <h3 id="conclusion">Conclusion</h3>
+                <p>總結來說，要讓ANC達到預期的效果，要注意以下兩件事情:</p>
+                
+                <ul>
+                    <li>參考雜訊的雜訊純度越高，ANC的效果越好</li>
+                    <li>把訊號的平均值弄到0</li>
+                </ul>
+
+            </article>
+        </div>
+        </div>
+        </div>
+    </body>
+
+
+</html>
